@@ -1,42 +1,37 @@
+# bot.py
 import discord
 from discord.ext import commands
 import asyncio
-import os
-from aternos import start_server, stop_server
 
-
-bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
-TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD_ID = int(os.getenv("GUILD_ID"))
-
+# Make sure intents are enabled
 intents = discord.Intents.default()
-client = discord.Client(intents=intents)
-tree = app_commands.CommandTree(client)
+intents.message_content = True
+intents.messages = True
 
+# Bot prefix is !
+bot = commands.Bot(command_prefix='!', intents=intents)
 
-@client.event
-async def on_ready():
-    await tree.sync(guild=discord.Object(id=GUILD_ID))
-    print(f"Logged in as {client.user}")
+# Test command to make sure bot responds
+@bot.command()
+async def ping(ctx):
+    await ctx.send("🏓 Pong!")
 
+# Example start command (replace with your Aternos logic later)
+@bot.command()
+async def start(ctx):
+    await ctx.send("🚀 Starting server...")
+    # Simulate server start delay
+    await asyncio.sleep(2)  # Remove or replace with your actual Aternos code
+    await ctx.send("✅ Server started!")
 
-@tree.command(name="start", description="Start the Aternos server")
-async def start(interaction: discord.Interaction):
-    await interaction.response.send_message("Starting server...")
-    await start_server()
+# Example stop command with auto-shutdown
+@bot.command()
+async def stop(ctx):
+    await ctx.send("⏹️ Stopping server...")
+    await asyncio.sleep(2)  # Simulate server stop
+    await ctx.send("✅ Server stopped!")
 
-    await interaction.followup.send("Server started. Auto-shutdown in 2 minutes.")
-
-    await asyncio.sleep(120)
-    await stop_server()
-    await interaction.followup.send("Server auto-shutdown complete.")
-
-
-@tree.command(name="stop", description="Stop the Aternos server")
-async def stop(interaction: discord.Interaction):
-    await interaction.response.send_message("Stopping server...")
-    await stop_server()
-    await interaction.followup.send("Server stopped.")
-
-
-client.run(TOKEN)
+# Run the bot with token from Railway environment variables
+import os
+TOKEN = os.getenv("DISCORD_TOKEN")
+bot.run(TOKEN)
