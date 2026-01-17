@@ -1,9 +1,11 @@
 import discord
-from discord import app_commands
+from discord.ext import commands
 import asyncio
 import os
 from aternos import start_server, stop_server
 
+
+bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID"))
 
