@@ -1,1 +1,1 @@
-worker: python bot.py
+worker: python install_browsers.py && python bot.py
