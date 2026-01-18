@@ -1,6 +1,0 @@
-[build]
-builder = "NIXPACKS"
-
-[build.commands]
-# Install Chromium after Python packages
-postinstall = "playwright install chromium"
