@@ -2,7 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from aternos import Aternos
-import os
+
 print("PLAYWRIGHT_BROWSERS_PATH =", os.getenv("PLAYWRIGHT_BROWSERS_PATH"))
 
 
