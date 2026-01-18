@@ -1,56 +1,56 @@
-import os
+# aternos.py
 from playwright.async_api import async_playwright
+import asyncio
+import os
 
-ATERNOS_EMAIL = os.getenv("ATERNOS_EMAIL")
-ATERNOS_PASSWORD = os.getenv("ATERNOS_PASSWORD")
-
-class Aternos:
+class AternosBot:
     def __init__(self):
+        self.email = os.getenv("ATERNOS_EMAIL")
+        self.password = os.getenv("ATERNOS_PASSWORD")
         self.playwright = None
         self.browser = None
         self.context = None
         self.page = None
 
-    async def login(self):
-        if self.page:
-            return
-
+    async def start(self):
         self.playwright = await async_playwright().start()
-
         self.browser = await self.playwright.chromium.launch(
             headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage"
-            ]
+            args=["--no-sandbox", "--disable-dev-shm-usage"]
         )
-
-        self.context = await self.browser.new_context()
+        self.context = await self.browser.new_context(ignore_https_errors=True)
         self.page = await self.context.new_page()
 
-        await self.page.goto("https://aternos.org/go/", timeout=30000)
+        # Go to login page
+        await self.page.goto("https://aternos.org/go/", timeout=120000, wait_until="networkidle")
 
-        await self.page.fill("#user", ATERNOS_EMAIL)
-        await self.page.fill("#password", ATERNOS_PASSWORD)
-        await self.page.click("button[type=submit]")
+        # Fill login form
+        await self.page.fill('input[name="user"]', self.email)
+        await self.page.fill('input[name="password"]', self.password)
+        await self.page.click('button[type="submit"]')
 
-        await self.page.wait_for_url("**/server/**", timeout=30000)
+        # Wait for server page
+        await self.page.wait_for_selector('button[data-action="start"]', timeout=120000)
 
-    async def start_server(self):
-        await self.login()
-        await self.page.click("button:has-text('Start')")
+        # Click start
+        await self.page.click('button[data-action="start"]')
 
-    async def stop_server(self):
-        if self.page:
-            await self.page.click("button:has-text('Stop')")
+        # Wait for server to start
+        await self.page.wait_for_selector('button[data-action="stop"]', timeout=120000)
+        return "Server started ✅"
+
+    async def stop(self):
+        if not self.page:
+            return "Browser not running ❌"
+        # Go to server page
+        await self.page.goto("https://aternos.org/go/", timeout=120000, wait_until="networkidle")
+        await self.page.wait_for_selector('button[data-action="stop"]', timeout=120000)
+        await self.page.click('button[data-action="stop"]')
+        await self.page.wait_for_selector('button[data-action="start"]', timeout=120000)
+        return "Server stopped ✅"
 
     async def close(self):
         if self.browser:
             await self.browser.close()
         if self.playwright:
             await self.playwright.stop()
-
-        self.browser = None
-        self.playwright = None
-        self.context = None
-        self.page = None
