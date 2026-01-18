@@ -1,4 +1,12 @@
 import os
+import sys
+
+print("=== BOT STARTING ===", flush=True)
+print("PLAYWRIGHT_BROWSERS_PATH =", os.getenv("PLAYWRIGHT_BROWSERS_PATH"), flush=True)
+sys.stdout.flush()
+
+import os
+import asyncio
 import discord
 from discord.ext import commands
 from aternos import Aternos
