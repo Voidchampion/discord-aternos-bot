@@ -1,55 +1,48 @@
-import os
-import sys
-
-print("=== BOT STARTING ===", flush=True)
-print("PLAYWRIGHT_BROWSERS_PATH =", os.getenv("PLAYWRIGHT_BROWSERS_PATH"), flush=True)
-sys.stdout.flush()
-
-import os
-import asyncio
+# bot.py
 import discord
-from discord.ext import commands
-from aternos import Aternos
-
-print("PLAYWRIGHT_BROWSERS_PATH =", os.getenv("PLAYWRIGHT_BROWSERS_PATH"))
-
+from discord.ext import commands, tasks
+import asyncio
+import os
+from aternos import AternosBot
 
 intents = discord.Intents.default()
-intents.message_content = True
-
 bot = commands.Bot(command_prefix="!", intents=intents)
-aternos = Aternos()
+
+aternos_bot = AternosBot()
+
+# Debug environment variable
+print("=== BOT STARTING ===", flush=True)
+print("PLAYWRIGHT_BROWSERS_PATH =", os.getenv("PLAYWRIGHT_BROWSERS_PATH"), flush=True)
 
 @bot.event
 async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
+    print(f"Logged in as {bot.user}")
 
 @bot.command()
 async def ping(ctx):
-    await ctx.send("🏓 Pong!")
+    await ctx.send("Pong 🏓")
 
 @bot.command()
 async def start(ctx):
-    await ctx.send("🚀 Starting Aternos server...")
-
+    await ctx.send("Starting Aternos server...")
     try:
-        await aternos.start_server()
-        await ctx.send("✅ Server started! Auto shutdown in 2 minutes.")
-
-        await asyncio.sleep(120)
-
-        await aternos.stop_server()
-        await ctx.send("⏹️ Server stopped automatically.")
-
+        result = await aternos_bot.start()
+        await ctx.send(result)
     except Exception as e:
-        await ctx.send(f"❌ Error: {e}")
+        await ctx.send(f"❌ Failed to start server: {e}")
 
 @bot.command()
 async def stop(ctx):
+    await ctx.send("Stopping Aternos server...")
     try:
-        await aternos.stop_server()
-        await ctx.send("⏹️ Server stopped.")
+        result = await aternos_bot.stop()
+        await ctx.send(result)
     except Exception as e:
-        await ctx.send(f"❌ Error: {e}")
+        await ctx.send(f"❌ Failed to stop server: {e}")
+
+@bot.command()
+async def close(ctx):
+    await aternos_bot.close()
+    await ctx.send("Browser closed ✅")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
