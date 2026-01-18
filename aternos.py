@@ -1,62 +1,42 @@
 from playwright.async_api import async_playwright
-import asyncio
 import os
 
 ATERNOS_EMAIL = os.getenv("ATERNOS_EMAIL")
 ATERNOS_PASSWORD = os.getenv("ATERNOS_PASSWORD")
-SERVER_NAME = os.getenv("ATERNOS_SERVER_NAME")
 
+class Aternos:
+    def __init__(self):
+        self.playwright = None
+        self.browser = None
+        self.page = None
 
-async def start_server():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(
-    headless=True,
-    args=[
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage"
-    ]
-)
+    async def login(self):
+        self.playwright = await async_playwright().start()
+        self.browser = await self.playwright.chromium.launch(
+            headless=True,
+            args=["--no-sandbox"]
+        )
+        context = await self.browser.new_context()
+        self.page = await context.new_page()
 
-        page = await browser.new_page()
+        await self.page.goto("https://aternos.org/go/")
+        await self.page.fill('input[name="username"]', ATERNOS_EMAIL)
+        await self.page.fill('input[name="password"]', ATERNOS_PASSWORD)
+        await self.page.click('button[type="submit"]')
 
-        await page.goto("https://aternos.org/go/")
+        await self.page.wait_for_url("https://aternos.org/server/*", timeout=20000)
 
-        # Login
-        await page.fill('input[name="user"]', ATERNOS_EMAIL)
-        await page.fill('input[name="password"]', ATERNOS_PASSWORD)
-        await page.click('button[type="submit"]')
+    async def start(self):
+        if not self.page:
+            await self.login()
+        await self.page.click('button:has-text("Start")')
 
-        await page.wait_for_timeout(5000)
+    async def stop(self):
+        if self.page:
+            await self.page.click('button:has-text("Stop")')
 
-        # Select server
-        await page.click(f"text={SERVER_NAME}")
-        await page.wait_for_timeout(3000)
-
-        # Start server
-        await page.click("#start")
-        await page.wait_for_timeout(5000)
-
-        await browser.close()
-
-
-async def stop_server():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-
-        await page.goto("https://aternos.org/go/")
-
-        await page.fill('input[name="user"]', ATERNOS_EMAIL)
-        await page.fill('input[name="password"]', ATERNOS_PASSWORD)
-        await page.click('button[type="submit"]')
-
-        await page.wait_for_timeout(5000)
-        await page.click(f"text={SERVER_NAME}")
-        await page.wait_for_timeout(3000)
-
-        await page.click("#stop")
-        await page.wait_for_timeout(5000)
-
-        await browser.close()
-# aternos automation 
+    async def close(self):
+        if self.browser:
+            await self.browser.close()
+        if self.playwright:
+            await self.playwright.stop()
