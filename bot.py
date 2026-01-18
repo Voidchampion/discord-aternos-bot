@@ -1,55 +1,24 @@
-# bot.py
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import asyncio
 import os
-from aternos import AternosBot
+import aiohttp
 
-intents = discord.Intents.default()
-intents.message_content = True  # REQUIRED for commands
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-aternos_bot = AternosBot()
-
-# Debug startup
-print("=== BOT STARTING ===", flush=True)
-print("PLAYWRIGHT_BROWSERS_PATH =", os.getenv("PLAYWRIGHT_BROWSERS_PATH"), flush=True)
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
 
 @bot.event
 async def on_ready():
-    print(f"[Bot] Logged in as {bot.user}", flush=True)
+    print(f"Logged in as {bot.user}")
 
-# Simple ping command
 @bot.command()
-async def ping(ctx):
-    await ctx.send("Pong 🏓")
-
-# Start command with background task
-@bot.command()
-async def start(ctx):
-    await ctx.send("⚡ Starting Aternos server in background...")
-
-    async def start_task():
-        result = await aternos_bot.start()
-        await ctx.send(result)
-
-    asyncio.create_task(start_task())
-
-# Stop command with background task
-@bot.command()
-async def stop(ctx):
-    await ctx.send("⚡ Stopping Aternos server in background...")
-
-    async def stop_task():
-        result = await aternos_bot.stop()
-        await ctx.send(result)
-
-    asyncio.create_task(stop_task())
-
-# Close browser manually if needed
-@bot.command()
-async def close(ctx):
-    await aternos_bot.close()
-    await ctx.send("Browser closed ✅")
+async def test_conn(ctx):
+    """Test if container can reach Aternos"""
+    await ctx.send("Testing connectivity to Aternos...")
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://aternos.org/go/", timeout=10) as resp:
+                await ctx.send(f"✅ Success! Status code: {resp.status}")
+    except Exception as e:
+        await ctx.send(f"❌ Failed to reach Aternos: {e}")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
