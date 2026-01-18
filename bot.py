@@ -1,8 +1,10 @@
 import os
-import asyncio
 import discord
 from discord.ext import commands
 from aternos import Aternos
+import os
+print("PLAYWRIGHT_BROWSERS_PATH =", os.getenv("PLAYWRIGHT_BROWSERS_PATH"))
+
 
 intents = discord.Intents.default()
 intents.message_content = True
